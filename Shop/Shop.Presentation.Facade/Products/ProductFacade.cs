@@ -1,0 +1,84 @@
+﻿using Common.Application;
+using MediatR;
+using Microsoft.Extensions.Caching.Distributed;
+using Shop.Application.Products.AddImage;
+using Shop.Application.Products.Create;
+using Shop.Application.Products.Edit;
+using Shop.Application.Products.RemoveImage;
+using Shop.Presentation.Facade.Sellers.Inventories;
+using Shop.Query.Products.DTOs;
+using Shop.Query.Products.GetByFilter;
+using Shop.Query.Products.GetById;
+using Shop.Query.Products.GetBySlug;
+using Shop.Query.Products.GetForShop;
+
+namespace Shop.Presentation.Facade.Products
+{
+    internal class ProductFacade : IProductFacade
+    {
+        private readonly IMediator _mediator;
+        private readonly ISellerInventoryFacade _sellerInventoryFacade;
+
+        public ProductFacade(IMediator mediator, ISellerInventoryFacade sellerInventoryFacade)
+        {
+            _mediator = mediator;
+            _sellerInventoryFacade = sellerInventoryFacade;
+        }
+
+        public async Task<OperationResult> AddImageProduct(AddProductImageCommand command)
+        {
+            return await _mediator.Send(command);
+        }
+
+        public async Task<OperationResult> CreateProduct(CreateProductCommand command)
+        {
+            return await _mediator.Send(command);
+        }
+
+        public async Task<OperationResult> EditProduct(EditProductCommand command)
+        {
+            return await _mediator.Send(command);
+        }
+
+        public async Task<OperationResult> RemoveImageProduct(RemoveProductImageCommand command)
+        {
+            return await _mediator.Send(command);
+        }
+
+        public async Task<ProductFilterResult> GetProductByFilter(ProductFilterParams filterParams)
+        {
+            return await _mediator.Send(new GetProductByFilterQuery(filterParams));
+        }
+
+        public async Task<ProductDto?> GetProductById(long id)
+        {
+            return await _mediator.Send(new GetProductByIdQuery(id));
+        }
+
+        public async Task<ProductDto?> GetProductBySlug(string slug)
+        {
+            return await _mediator.Send(new GetProductBySlugQuery(slug));
+        }
+
+        public async Task<ProductShopResult> GetProductForShop(ProductShopFilterParam filterParams)
+        {
+            return await _mediator.Send(new GetProductsForShopQuery(filterParams));
+        }
+
+        public async Task<SingleProductDto?> GetProductBySlugForSinglePage(string slug)
+        {
+            var product = await _mediator.Send(new GetProductBySlugQuery(slug));
+            if (product == null)
+                return null;
+
+            var inventories = await _sellerInventoryFacade.GetByProductById(product.Id);
+
+            var model = new SingleProductDto()
+            {
+                ProductDto = product,
+                Inventories = inventories
+            };
+            return model;
+        }
+    }
+}
